@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from cereal import car
-from selfdrive.car.tesla.values import CAR
+from selfdrive.car.tesla.values import CAR, CarControllerParams
 from selfdrive.car import STD_CARGO_KG, gen_empty_fingerprint, scale_rot_inertia, scale_tire_stiffness
 from selfdrive.car.interfaces import CarInterfaceBase
 
@@ -8,8 +8,7 @@ from selfdrive.car.interfaces import CarInterfaceBase
 class CarInterface(CarInterfaceBase):
   @staticmethod
   def compute_gb(accel, speed):
-    # TODO: is this correct?
-    return accel
+    return float(accel) / CarControllerParams.ACCEL_SCALE
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
