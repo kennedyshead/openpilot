@@ -11,11 +11,31 @@ class CarState(CarStateBase):
     super().__init__(CP)
     self.button_states = {button.event_type: False for button in BUTTONS}
     self.can_define = CANDefine(DBC[CP.carFingerprint]['chassis'])
-
+    self.db = {'eac_status': None, 'autopark_status': None}
     # Needed by carcontroller
     self.msg_stw_actn_req = None
     self.hands_on_level = 0
     self.steer_warning = None
+
+  def _autopark_or_summon(self, cp_cam):
+    eac_status = self.can_define.dv["DAS_pscControl"]["DAS_eacState"].get(
+      int(cp_cam.vl["DAS_pscControl"]["DAS_eacState"]), None)
+    autopark_status = self.can_define.dv["DAS_pscControl"]["DAS_pscParkState"].get(
+      int(cp_cam.vl["DAS_pscControl"]["DAS_pscParkState"]), None)
+
+    if autopark_status != self.db['autopark_status']:
+      self.db['autopark_status'] = autopark_status
+      print(autopark_status)
+    if eac_status != self.db['eac_status']:
+      self.db['eac_status'] = eac_status
+      print(eac_status)
+
+    return (
+      eac_status == "EAC_ACTIVE"
+      or autopark_status in ["SUMMON", "COMPLETE", "ABORT", "PARALLEL_PULL_OUT_TO_RIGHT",
+                             "PARALLEL_PULL_OUT_TO_LEFT", "PARK_RIGHT_CROSS", "PARK_RIGHT_PARALLEL",
+                             "PARK_LEFT_CROSS", "PARK_LEFT_PARALLEL"]
+    )
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
@@ -46,12 +66,13 @@ class CarState(CarStateBase):
     ret.steerWarning = self.steer_warning in ["EAC_ERROR_MAX_SPEED", "EAC_ERROR_MIN_SPEED", "EAC_ERROR_TMP_FAULT", "SNA"]  # TODO: not sure if this list is complete
 
     # Cruise state
+    summon_or_autopark_enabled = self._autopark_or_summon(cp_cam)
     cruise_state = self.can_define.dv["DI_state"]["DI_cruiseState"].get(int(cp.vl["DI_state"]["DI_cruiseState"]), None)
     speed_units = self.can_define.dv["DI_state"]["DI_speedUnits"].get(int(cp.vl["DI_state"]["DI_speedUnits"]), None)
 
     acc_enabled = (cruise_state in ["ENABLED", "STANDSTILL", "OVERRIDE", "PRE_FAULT", "PRE_CANCEL"])
 
-    ret.cruiseState.enabled = acc_enabled
+    ret.cruiseState.enabled = acc_enabled and not summon_or_autopark_enabled
     if speed_units == "KPH":
       ret.cruiseState.speed = cp.vl["DI_state"]["DI_digitalSpeed"] * CV.KPH_TO_MS
     elif speed_units == "MPH":
@@ -173,9 +194,10 @@ class CarState(CarStateBase):
   @staticmethod
   def get_cam_can_parser(CP):
     signals = [
-      # sig_name, sig_address, default
+      ("DAS_eacState", "DAS_pscControl", 0),
+      ("DAS_pscParkState", "DAS_pscControl", 0),
     ]
     checks = [
-      # sig_address, frequency
+      ("DAS_pscControl", 25),
     ]
     return CANParser(DBC[CP.carFingerprint]['chassis'], signals, checks, CANBUS.autopilot)
