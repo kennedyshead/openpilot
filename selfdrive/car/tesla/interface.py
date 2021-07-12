@@ -20,10 +20,10 @@ class CarInterface(CarInterfaceBase):
     # There is no safe way to do steer blending with user torque,
     # so the steering behaves like autopilot. This is not
     # how openpilot should be, hence dashcamOnly
-    ret.dashcamOnly = True
+    ret.dashcamOnly = False
 
     ret.steerControlType = car.CarParams.SteerControlType.angle
-    ret.openpilotLongitudinalControl = False
+    ret.openpilotLongitudinalControl = True
     ret.communityFeature = True
 
     ret.steerActuatorDelay = 0.1
