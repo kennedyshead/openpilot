@@ -10,21 +10,21 @@ class CarController():
     self.packer = CANPacker(dbc_name)
     self.tesla_can = TeslaCAN(dbc_name, self.packer)
 
-    self.cruiseDelayFrame = 0
-    self.prevCruiseEnabled = False
+    self.cruise_delay_frame = 0
+    self.prev_cruise_enabled = False
 
   def update(self, enabled, CS, frame, actuators, cruise_cancel):
     can_sends = []
     # add 1 second delay logic to wait for AP which has a status at 2Hz
-    if CS.cruiseEnabled:
-      if not self.prevCruiseEnabled:
-        self.cruiseDelayFrame = frame
-      if frame - self.cruiseDelayFrame > 30:
-        CS.cruiseDelay = True
+    if CS.cruise_enabled:
+      if not self.prev_cruise_enabled:
+        self.cruise_delay_frame = frame
+      if frame - self.cruise_delay_frame > 30:
+        CS.cruise_delay = True
     else:
-      self.cruiseDelayFrame = 0
-      CS.cruiseDelay = False
-    self.prevCruiseEnabled = CS.cruiseEnabled
+      self.cruise_delay_frame = 0
+      CS.cruise_delay = False
+    self.prev_cruise_enabled = CS.cruise_enabled
 
     # Temp disable steering on a hands_on_fault, and allow for user override
     hands_on_fault = (CS.steer_warning == "EAC_ERROR_HANDS_ON" and CS.hands_on_level >= 3)

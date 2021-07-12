@@ -20,6 +20,7 @@ class CarState(CarStateBase):
     # Car specific
     self.cruise_delay = False
     self.autopilot_enabled = False
+    self.cruise_enabled = False
 
   def update(self, cp, cp_cam):
     ret = car.CarState.new_message()
@@ -59,6 +60,7 @@ class CarState(CarStateBase):
     acc_enabled = (cruise_state in ["ENABLED", "STANDSTILL", "OVERRIDE", "PRE_FAULT", "PRE_CANCEL"])
 
     ret.cruiseState.enabled = acc_enabled and not self.autopilot_enabled and not self.cruise_delay
+    self.cruise_enabled = ret.cruiseState.enabled
     if speed_units == "KPH":
       ret.cruiseState.speed = cp.vl["DI_state"]["DI_digitalSpeed"] * CV.KPH_TO_MS
     elif speed_units == "MPH":
