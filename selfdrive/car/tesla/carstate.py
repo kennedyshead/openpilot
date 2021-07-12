@@ -159,6 +159,7 @@ class CarState(CarStateBase):
       ("WprSw6Posn", "STW_ACTN_RQ", 0),
       ("MC_STW_ACTN_RQ", "STW_ACTN_RQ", 0),
       ("CRC_STW_ACTN_RQ", "STW_ACTN_RQ", 0),
+      ("autopilotStatus", "AutopilotStatus", 0),
     ]
 
     checks = [
@@ -173,6 +174,7 @@ class CarState(CarStateBase):
       ("GTW_carState", 10),
       ("SDM1", 10),
       ("BrakeMessage", 50),
+      ("AutopilotStatus", 2),
     ]
 
     return CANParser(DBC[CP.carFingerprint]['chassis'], signals, checks, CANBUS.chassis)
