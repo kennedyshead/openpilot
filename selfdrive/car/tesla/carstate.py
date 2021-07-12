@@ -59,8 +59,8 @@ class CarState(CarStateBase):
 
     acc_enabled = (cruise_state in ["ENABLED", "STANDSTILL", "OVERRIDE", "PRE_FAULT", "PRE_CANCEL"])
 
-    ret.cruiseState.enabled = acc_enabled and not self.autopilot_enabled and not self.cruise_delay
-    self.cruise_enabled = ret.cruiseState.enabled
+    ret.cruiseState.enabled: bool = acc_enabled and not self.autopilot_enabled
+    self.cruise_enabled = ret.cruiseState.enabled and self.cruise_delay
     if speed_units == "KPH":
       ret.cruiseState.speed = cp.vl["DI_state"]["DI_digitalSpeed"] * CV.KPH_TO_MS
     elif speed_units == "MPH":
